@@ -1,3 +1,3 @@
 import type { NextConfig } from 'next';
-const config: NextConfig = { output: 'export', images: { unoptimized: true }, devIndicators: false, turbopack: { root: process.cwd() }, outputFileTracingRoot: process.cwd() };
+const config: NextConfig = { images: { unoptimized: true }, devIndicators: false, turbopack: { root: process.cwd() }, outputFileTracingRoot: process.cwd() };
 export default config;
