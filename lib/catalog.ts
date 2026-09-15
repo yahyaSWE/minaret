@@ -16,7 +16,8 @@ type Catalog = { docs: Book[]; page: number; totalPages: number; hasNextPage: bo
 export const getCatalog = cache(async (page = 1, id?: number): Promise<Catalog> => {
   // Bygget ska fungera även när CMS:et är avstängt. Data hämtas vid besök.
   await connection();
-  const base = process.env.CMS_URL ?? 'https://ljudbok-cms.vercel.app';
+  // En tom miljövariabel ska använda samma standard som en osatt variabel.
+  const base = process.env.CMS_URL?.trim() || 'https://ljudbok-cms.vercel.app';
   const url = new URL('/api/catalog/books', base);
   url.searchParams.set('page', String(page));
   if (id !== undefined) url.searchParams.set('id', String(id));
