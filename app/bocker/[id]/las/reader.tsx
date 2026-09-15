@@ -5,6 +5,8 @@ import type Book from 'epubjs/types/book';
 import type Rendition from 'epubjs/types/rendition';
 import type { Location } from 'epubjs/types/rendition';
 import type { NavItem } from 'epubjs/types/navigation';
+import type Section from 'epubjs/types/section';
+import { resolveChapterHref } from '@/lib/epub-navigation';
 
 function flatten(items: NavItem[], level = 0): { href: string; label: string }[] {
   return items.flatMap((item) => [{ href: item.href, label: `${'– '.repeat(level)}${item.label.trim()}` }, ...flatten(item.subitems ?? [], level + 1)]);
@@ -16,7 +18,9 @@ export function EbookReader({ bookId, title }: { bookId: number; title: string }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
-  const [toc, setToc] = useState<{ href: string; label: string }[]>([]);
+  const [toc, setToc] = useState<{ href: string; label: string; available: boolean }[]>([]);
+  const [navigationError, setNavigationError] = useState('');
+  const navigationBusy = useRef(false);
   const [chapter, setChapter] = useState('');
   const [fontSize, setFontSize] = useState(110);
   const [atStart, setAtStart] = useState(true);
@@ -28,7 +32,7 @@ export function EbookReader({ bookId, title }: { bookId: number; title: string }
     let book: Book | undefined;
     let observer: ResizeObserver | undefined;
     const abort = new AbortController();
-    setLoading(true); setError(''); setToc([]); setChapter('');
+    setLoading(true); setError(''); setNavigationError(''); setToc([]); setChapter('');
     const timeout = window.setTimeout(() => {
       abort.abort();
       if (!disposed) { setError('Boken tog för lång tid att öppna. Försök igen.'); setLoading(false); }
@@ -47,7 +51,12 @@ export function EbookReader({ bookId, title }: { bookId: number; title: string }
         await book.open(bytes, 'binary');
         if (disposed || abort.signal.aborted) return;
         const navigation = await book.loaded.navigation;
-        const items = flatten(navigation.toc);
+        const spineHrefs: string[] = [];
+        book.spine.each((section: Section) => spineHrefs.push(section.href));
+        const items = flatten(navigation.toc).map((item) => {
+          const resolved = resolveChapterHref(item.href, spineHrefs);
+          return { ...item, href: resolved ?? item.href, available: resolved !== null };
+        });
         setToc(items);
         const key = `minaret:reading:${bookId}:${response.headers.get('X-Ebook-Version') ?? '1'}`;
         const view = book.renderTo(viewer.current, {
@@ -91,25 +100,28 @@ export function EbookReader({ bookId, title }: { bookId: number; title: string }
 
   async function navigate(target: 'previous' | 'next' | { href: string }) {
     const view = rendition.current;
-    if (!view || turning) return;
+    if (!view || navigationBusy.current) return;
+    navigationBusy.current = true;
     setTurning(true);
+    setNavigationError('');
     try {
       if (target === 'previous') await view.prev();
       else if (target === 'next') await view.next();
       else await view.display(target.href);
-    } catch { setError('Sidan kunde inte öppnas. Försök ladda om boken.'); }
-    finally { setTurning(false); }
+    } catch { setNavigationError('Kapitlet kunde inte öppnas. Välj ett annat kapitel eller fortsätt bläddra.'); }
+    finally { navigationBusy.current = false; setTurning(false); }
   }
 
   return <section className="ebook-reader" aria-label={`Läs ${title}`}>
     <div className="reader-toolbar">
-      <label>Innehåll<select aria-label="Välj kapitel" value={chapter} disabled={loading || !!error} onChange={(e) => { if (e.target.value) void navigate({ href: e.target.value }); }}>
-        <option value="">Välj kapitel</option>{toc.map((item, index) => <option key={`${item.href}-${index}`} value={item.href}>{item.label}</option>)}
+      <label>Innehåll<select aria-label="Välj kapitel" value={chapter} disabled={loading || !!error || turning} onChange={(e) => { if (e.target.value) void navigate({ href: e.target.value }); }}>
+        <option value="">Välj kapitel</option>{toc.map((item, index) => <option key={`${item.href}-${index}`} value={item.href} disabled={!item.available}>{item.label}{!item.available ? ' (länk saknas)' : ''}</option>)}
       </select></label>
-      <label>Textstorlek<select value={fontSize} disabled={loading || !!error} onChange={(e) => { const value = Number(e.target.value); setFontSize(value); rendition.current?.themes.fontSize(`${value}%`); }}>
+      <label>Textstorlek<select value={fontSize} disabled={loading || !!error || turning} onChange={(e) => { const value = Number(e.target.value); setFontSize(value); rendition.current?.themes.fontSize(`${value}%`); }}>
         {[90, 100, 110, 125, 150, 175].map((size) => <option value={size} key={size}>{size}%</option>)}
       </select></label>
     </div>
+    {navigationError && <p className="reader-message" role="alert">{navigationError}</p>}
     {loading && <p className="reader-message" role="status">Öppnar boken …</p>}
     {error && <div className="reader-message" role="alert"><p>{error}</p><button className="button primary" onClick={() => setAttempt((n) => n + 1)}>Försök igen</button></div>}
     <div ref={viewer} className="reader-viewer" style={{ display: error ? 'none' : undefined }} aria-busy={loading}/>
