@@ -114,3 +114,21 @@
 .catalog-tags li{background:#e2eee7;border-radius:30px;padding:5px 14px;font-size:12px}
 @media(max-width:900px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-detail{gap:32px;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)}}
 @media(max-width:600px){.catalog-grid{grid-template-columns:1fr}.catalog-detail{grid-template-columns:1fr}.catalog-detail>.catalog-cover{width:100%;max-width:330px;margin:auto}.catalog-card h2{font-size:32px}}
+
+/* Free EPUB reading */
+.free-reading-label{color:#276457;font-weight:600}
+.reader-page{padding-top:32px;padding-bottom:56px;max-width:1100px}
+.reader-page h1{font-size:clamp(1.8rem,4vw,3rem);margin:24px 0 8px}
+.ebook-reader{margin-top:24px;border:1px solid #d9dfd8;border-radius:16px;background:#fffdf8;overflow:hidden}
+.reader-toolbar{display:flex;gap:20px;flex-wrap:wrap;align-items:end;padding:16px 20px;background:#f0f2eb;border-bottom:1px solid #d9dfd8}
+.reader-toolbar label{display:grid;gap:6px;font-size:14px;font-weight:600;min-width:0}
+.reader-toolbar label:first-child{flex:1;min-width:140px}
+.reader-toolbar select{font:inherit;font-weight:400;width:100%;max-width:100%;padding:10px;border:1px solid #b8c5bd;border-radius:6px;background:white;color:#202b28}
+.reader-viewer{height:65vh;height:65dvh;min-height:360px;max-height:850px;width:100%;overflow:hidden}
+.reader-message{padding:24px;text-align:center}
+.reader-controls{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-top:1px solid #d9dfd8}
+.reader-controls .button{cursor:pointer;background:#edf1e9;color:#203c33;border:1px solid #b8c5bd;white-space:nowrap}
+.reader-controls button:disabled{opacity:.4;cursor:default}
+.reader-controls span{font-size:13px;text-align:center}
+.reader-note{font-size:13px;color:#58675f;text-align:center;margin:0;padding:0 16px 16px}
+@media(max-width:600px){.reader-toolbar,.reader-controls{padding:12px;gap:10px}.reader-controls .button{padding:12px;font-size:13px}.reader-controls span{max-width:90px;font-size:11px}.reader-page{padding-left:12px;padding-right:12px}}

@@ -24,6 +24,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
       <span className="eyebrow">MINARET FÖRLAG · {formatLabel[book.formats]}</span><h1>{book.title}</h1><p className="catalog-author">Av {book.author}</p>
       <div className="catalog-description">{book.description.split(/\n\s*\n/).filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>
       {book.categories.length > 0 && <ul className="catalog-tags" aria-label="Kategorier">{book.categories.map((category) => <li key={category.slug}>{category.name}</li>)}</ul>}
+      {book.canReadFree && <p><Link className="button primary" href={`/bocker/${book.id}/las`}>Läs gratis</Link></p>}
       <Link className="text-link" href="/bocker">← Tillbaka till böckerna</Link>
     </div></article>
   </main>;

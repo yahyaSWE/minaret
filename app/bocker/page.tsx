@@ -22,7 +22,7 @@ export default async function Books({ searchParams }: { searchParams: Promise<{ 
       {catalog.docs.length ? <div className="catalog-grid">{catalog.docs.map((book) =>
         <Link className="catalog-card" href={`/bocker/${book.id}`} key={book.id}>
           <Cover book={book}/><div className="catalog-card-copy"><span className="eyebrow">{formatLabel[book.formats]}</span>
-          <h2>{book.title}</h2><p>{book.author}</p><span className="text-link">Läs om boken <ArrowUpRight size={18}/></span></div>
+          <h2>{book.title}</h2><p>{book.author}</p>{book.canReadFree && <p className="free-reading-label">Gratis att läsa</p>}<span className="text-link">Läs om boken <ArrowUpRight size={18}/></span></div>
         </Link>)}</div> : <div className="empty-panel"><h2>{page > 1 ? 'Inga fler böcker.' : 'De första böckerna tar form.'}</h2><p>{page > 1 ? 'Gå tillbaka till föregående sida för att fortsätta utforska utgivningen.' : 'Här presenterar vi vår utgivning när böckerna är redo.'}</p></div>}
       <nav className="catalog-pagination" aria-label="Bläddra i bokkatalogen">
         {page > 1 && <Link className="text-link" href={`/bocker?sida=${page - 1}`}>← Föregående sida</Link>}

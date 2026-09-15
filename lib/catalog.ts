@@ -3,6 +3,7 @@ import { connection } from 'next/server';
 
 export type Book = {
   id: number;
+  canReadFree: boolean;
   title: string;
   author: string;
   description: string;
