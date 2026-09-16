@@ -7,7 +7,7 @@ export type KnowledgeItem = {
 export const knowledgeLabels = { article: 'Artikel', lecture: 'Föreläsning', document: 'Dokument' };
 export async function getKnowledge(filters: Record<string, string> = {}) {
   await connection();
-  const url = new URL('/api/knowledge/web', process.env.CMS_URL?.trim() || 'https://ljudbok-cms.vercel.app');
+  const url = new URL('/api/knowledge-bank/web', process.env.CMS_URL?.trim() || 'https://ljudbok-cms.vercel.app');
   for (const [key, value] of Object.entries(filters)) if (value) url.searchParams.set(key, value);
   const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error('Kunskapsbanken kunde inte hämtas.');
