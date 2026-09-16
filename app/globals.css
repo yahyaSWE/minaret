@@ -122,7 +122,7 @@
 .ebook-reader{margin-top:24px;border:1px solid #d9dfd8;border-radius:16px;background:#fffdf8;overflow:hidden}
 .reader-toolbar{display:flex;gap:20px;flex-wrap:wrap;align-items:end;padding:16px 20px;background:#f0f2eb;border-bottom:1px solid #d9dfd8}
 .reader-toolbar label{display:grid;gap:6px;font-size:14px;font-weight:600;min-width:0}
-.reader-toolbar label:first-child{flex:1;min-width:140px}
+.reader-toolbar label:has(select[aria-label="Välj kapitel"]){flex:1;min-width:140px}
 .reader-toolbar select{font:inherit;font-weight:400;width:100%;max-width:100%;padding:10px;border:1px solid #b8c5bd;border-radius:6px;background:white;color:#202b28}
 .reader-viewer{height:65vh;height:65dvh;min-height:360px;max-height:850px;width:100%;overflow:hidden}
 .reader-message{padding:24px;text-align:center}
@@ -132,3 +132,10 @@
 .reader-controls span{font-size:13px;text-align:center}
 .reader-note{font-size:13px;color:#58675f;text-align:center;margin:0;padding:0 16px 16px}
 @media(max-width:600px){.reader-toolbar,.reader-controls{padding:12px;gap:10px}.reader-controls .button{padding:12px;font-size:13px}.reader-controls span{max-width:90px;font-size:11px}.reader-page{padding-left:12px;padding-right:12px}}
+
+.reader-fullscreen-button{font:inherit;font-size:14px;font-weight:600;cursor:pointer;color:#203c33;background:white;border:1px solid #b8c5bd;border-radius:6px;padding:11px 14px;order:3;white-space:nowrap}
+.ebook-reader.reader-fullscreen{position:fixed;inset:0;z-index:10000;width:100%;height:100vh;height:100dvh;margin:0;border:0;border-radius:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.reader-fullscreen .reader-toolbar,.reader-fullscreen .reader-controls{flex-shrink:0}
+.reader-fullscreen .reader-viewer{flex:1;min-height:0;max-height:none;height:auto;width:100%;max-width:1050px;margin:0 auto}
+.reader-fullscreen .reader-note{display:none}
+@media(max-width:600px){.reader-fullscreen-button{padding:10px;font-size:12px}.reader-fullscreen .reader-toolbar{gap:8px}.reader-fullscreen .reader-toolbar label:first-of-type{flex-basis:100%;order:0}.reader-fullscreen .reader-toolbar label:last-of-type{flex:1;order:1}.reader-fullscreen-button{order:2}}

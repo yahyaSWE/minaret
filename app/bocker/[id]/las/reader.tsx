@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type Book from 'epubjs/types/book';
 import type Rendition from 'epubjs/types/rendition';
 import type { Location } from 'epubjs/types/rendition';
@@ -13,6 +13,52 @@ function flatten(items: NavItem[], level = 0): { href: string; label: string }[]
 }
 
 export function EbookReader({ bookId, title }: { bookId: number; title: string }) {
+  const reader = useRef<HTMLElement>(null);
+  const fullscreenButton = useRef<HTMLButtonElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const fullscreenRef = useRef(false);
+  const exitFullscreen = useCallback(() => {
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    setFullscreen(false);
+    fullscreenRef.current = false;
+    fullscreenButton.current?.focus();
+  }, []);
+
+  async function toggleFullscreen() {
+    if (fullscreen) { exitFullscreen(); return; }
+    setFullscreen(true);
+    fullscreenRef.current = true;
+    // iPhone and browsers that deny native fullscreen still get a full-window reader.
+    try { await reader.current?.requestFullscreen?.(); } catch { /* Use the CSS full-window view. */ }
+  }
+
+  useEffect(() => {
+    const changed = () => {
+      const active = document.fullscreenElement === reader.current;
+      setFullscreen(active); fullscreenRef.current = active;
+    };
+    document.addEventListener('fullscreenchange', changed);
+    return () => document.removeEventListener('fullscreenchange', changed);
+  }, []);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const keyboard = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); exitFullscreen(); }
+      if (event.key === 'Tab') {
+        const elements = reader.current?.querySelectorAll<HTMLElement>('button:not(:disabled), select:not(:disabled), iframe, a[href]');
+        if (!elements?.length) return;
+        const first = elements[0], last = elements[elements.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', keyboard);
+    return () => { document.body.style.overflow = previousOverflow; document.removeEventListener('keydown', keyboard); };
+  }, [fullscreen, exitFullscreen]);
+
   const viewer = useRef<HTMLDivElement>(null);
   const rendition = useRef<Rendition | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,6 +110,9 @@ export function EbookReader({ bookId, title }: { bookId: number; title: string }
           allowScriptedContent: false,
         });
         rendition.current = view;
+        view.on('keydown', (event: KeyboardEvent) => {
+          if (event.key === 'Escape' && fullscreenRef.current) { event.preventDefault(); exitFullscreen(); }
+        });
         view.themes.default({ body: { color: '#202b28', background: '#fffdf8', 'line-height': '1.7' } });
         view.themes.fontSize('110%');
         setFontSize(110);
@@ -96,7 +145,7 @@ export function EbookReader({ bookId, title }: { bookId: number; title: string }
       observer?.disconnect(); rendition.current = null;
       book?.destroy();
     };
-  }, [bookId, attempt]);
+  }, [bookId, attempt, exitFullscreen]);
 
   async function navigate(target: 'previous' | 'next' | { href: string }) {
     const view = rendition.current;
@@ -112,8 +161,9 @@ export function EbookReader({ bookId, title }: { bookId: number; title: string }
     finally { navigationBusy.current = false; setTurning(false); }
   }
 
-  return <section className="ebook-reader" aria-label={`Läs ${title}`}>
+  return <section ref={reader} className={`ebook-reader${fullscreen ? ' reader-fullscreen' : ''}`} role={fullscreen ? 'dialog' : undefined} aria-modal={fullscreen ? true : undefined} aria-label={`Läs ${title}`}>
     <div className="reader-toolbar">
+      <button ref={fullscreenButton} className="reader-fullscreen-button" type="button" aria-pressed={fullscreen} onClick={() => void toggleFullscreen()}>{fullscreen ? 'Avsluta helskärm' : 'Helskärm'}</button>
       <label>Innehåll<select aria-label="Välj kapitel" value={chapter} disabled={loading || !!error || turning} onChange={(e) => { if (e.target.value) void navigate({ href: e.target.value }); }}>
         <option value="">Välj kapitel</option>{toc.map((item, index) => <option key={`${item.href}-${index}`} value={item.href} disabled={!item.available}>{item.label}{!item.available ? ' (länk saknas)' : ''}</option>)}
       </select></label>
